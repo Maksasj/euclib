@@ -1,6 +1,8 @@
 #ifndef EUCLIB_H
 #define EUCLIB_H
 
+#define EUCLIB_INLINE static inline
+
 typedef unsigned int color_t;
 
 #define EUCLIB_WHITE    ((color_t)(0xffffffff))
@@ -39,6 +41,9 @@ typedef struct
     unsigned long long height;
 } euclib_plot_t;
 
+EUCLIB_INLINE void euclib_fill_rect(euclib_plot_t *plot, vec2i_t left_bottom, vec2i_t right_top, color_t color);
+EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color);
+
 typedef struct
 {
 
@@ -49,7 +54,7 @@ typedef struct
 
 } euclib_plot_bar_params_t;
 
-void euclib_plot_2d_bar(
+EUCLIB_INLINE void euclib_plot_2d_bar(
     euclib_plot_t *plot, 
     float values[], 
     unsigned int count, 
@@ -60,7 +65,7 @@ typedef struct
 
 } euclib_plot_dots_params_t;
 
-void euclib_plot_2d_dots(
+EUCLIB_INLINE void euclib_plot_2d_dots(
     euclib_plot_t *plot, 
     float values[], 
     unsigned int count, 
@@ -73,32 +78,14 @@ typedef struct
     color_t color;
 } euclib_plot_line_params_t;
 
-void euclib_plot_2d_line(
+EUCLIB_INLINE void euclib_plot_2d_line(
     euclib_plot_t *plot, 
     graph_value_callback_t callback, 
     euclib_plot_line_params_t params);
 
 #ifdef EUCLIB_IMPLEMENTATION
 
-void euclib_plot_2d_bar(
-    euclib_plot_t *plot, 
-    float values[], 
-    unsigned int count, 
-    euclib_plot_bar_params_t params
-) {
-
-}
-
-void euclib_plot_2d_dots(
-    euclib_plot_t *plot, 
-    float values[], 
-    unsigned int count, 
-    euclib_plot_dots_params_t params
-) {
-
-}
-
-void euclib_fill_rect(
+EUCLIB_INLINE void euclib_fill_rect(
     euclib_plot_t *plot, 
     vec2i_t left_bottom, 
     vec2i_t right_top, 
@@ -117,7 +104,7 @@ void euclib_fill_rect(
     }
 }
 
-void euclib_fill_plot(euclib_plot_t *plot, color_t color) {
+EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color) {
     for(int i = 0; i < plot->width; ++i) {
         for(int j = 0; j < plot->height; ++j) {
             plot->value[i + j*plot->width] = color;
@@ -125,7 +112,25 @@ void euclib_fill_plot(euclib_plot_t *plot, color_t color) {
     }
 }
 
-void euclib_plot_2d_line(
+EUCLIB_INLINE void euclib_plot_2d_bar(
+    euclib_plot_t *plot, 
+    float values[], 
+    unsigned int count, 
+    euclib_plot_bar_params_t params
+) {
+
+}
+
+EUCLIB_INLINE void euclib_plot_2d_dots(
+    euclib_plot_t *plot, 
+    float values[], 
+    unsigned int count, 
+    euclib_plot_dots_params_t params
+) {
+
+}
+
+EUCLIB_INLINE void euclib_plot_2d_line(
     euclib_plot_t *plot, 
     graph_value_callback_t callback, 
     euclib_plot_line_params_t params
