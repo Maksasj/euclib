@@ -14,7 +14,11 @@ int main() {
         .height = 600,
     };
 
-    euclib_plot_2d_line(&plot, &sinf);
+    euclib_plot_line_params_t params = {
+        .range = { -1.0f, 1.0f }
+    };
+
+    euclib_plot_2d_line(&plot, &sinf, params);
 
     stbi_write_jpg("plot.png", 800, 600, 4, plot.value, 800);
 
