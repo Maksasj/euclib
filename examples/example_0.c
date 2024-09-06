@@ -15,7 +15,9 @@ int main() {
     };
 
     euclib_plot_line_params_t params = {
-        .range = { -1.0f, 1.0f }
+        .x_range = { -10.0f, 10.0f },
+        .padding = 10.f,
+        .color = EUCLIB_BLUE
     };
 
     euclib_plot_2d_line(&plot, &sinf, params);

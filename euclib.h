@@ -12,12 +12,19 @@ typedef unsigned int color_t;
 #define EUCLIB_YELLOW   ((color_t)(0xff34ebeb))
 #define EUCLIB_ORANGE   ((color_t)(0xff3486eb))
 
+#define EUCLIB_ACCENT   ((color_t)(0xffeeeeee))
+
 typedef float (*graph_value_callback_t)(const float x);
 
 typedef struct {
     float x;
     float y;
 } vec2f_t;
+
+typedef struct {
+    int x;
+    int y;
+} vec2i_t;
 
 typedef struct {
     float x;
@@ -61,7 +68,9 @@ void euclib_plot_2d_dots(
 
 typedef struct
 {
-    vec2f_t range;
+    vec2f_t x_range;
+    unsigned int padding;
+    color_t color;
 } euclib_plot_line_params_t;
 
 void euclib_plot_2d_line(
@@ -89,15 +98,60 @@ void euclib_plot_2d_dots(
 
 }
 
+void euclib_fill_rect(
+    euclib_plot_t *plot, 
+    vec2i_t left_bottom, 
+    vec2i_t right_top, 
+    color_t color
+) {
+    int width = right_top.x - left_bottom.x;
+    int height = right_top.y - left_bottom.y;
+
+    for(int i = 0; i < width; ++i) {
+        for(int j = 0; j < height; ++j) {
+            int x = i + left_bottom.x;
+            int y = plot->height - (j + left_bottom.y); // Y flipping
+
+            plot->value[x + y * plot->width] = color;
+        }
+    }
+}
+
+void euclib_fill_plot(euclib_plot_t *plot, color_t color) {
+    for(int i = 0; i < plot->width; ++i) {
+        for(int j = 0; j < plot->height; ++j) {
+            plot->value[i + j*plot->width] = color;
+        }
+    }
+}
+
 void euclib_plot_2d_line(
     euclib_plot_t *plot, 
     graph_value_callback_t callback, 
     euclib_plot_line_params_t params
 ) {
-    for(int i = 0; i < plot->width; ++i) {
-        for(int j = 0; j < plot->height; ++j) {
-            plot->value[i + j*plot->width] = EUCLIB_WHITE;
-        }
+    euclib_fill_plot(plot, EUCLIB_ACCENT);
+
+    int width = plot->width;
+    int height = plot->height;
+
+    euclib_fill_rect(
+        plot,
+        (vec2i_t){params.padding, params.padding},
+        (vec2i_t){width - params.padding, height - params.padding},
+        EUCLIB_WHITE);
+
+    int area_width = width - params.padding;
+    int area_height = height - params.padding;
+
+    for(int i = params.padding; i < area_width; ++i) {
+        float d = (float) i / (float) area_width;
+
+        float x = (d * (params.x_range.y - params.x_range.x));
+
+        float value = callback(x);
+
+        plot->value[i + ((int) ((height / 2) - params.padding + value * 100) + params.padding) * width] = params.color;
     }
 }
 
