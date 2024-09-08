@@ -1,6 +1,12 @@
 #ifndef EUCLIB_H
 #define EUCLIB_H
 
+#ifndef EUCLIB_STRLEN
+    #include <string.h>
+
+    #define EUCLIB_STRLEN(STR) (strlen(STR))
+#endif
+
 #define EUCLIB_INLINE static inline
 
 #include "ibm_bios_font.h"
@@ -34,12 +40,6 @@ typedef struct {
     int y;
 } vec2i_t;
 
-typedef struct {
-    float x;
-    float y;
-    float z;
-} vec3f_t;
-
 typedef struct
 {
     color_t *value;
@@ -55,6 +55,9 @@ EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point)
 
 EUCLIB_INLINE void euclib_fill_rect(euclib_plot_t *plot, vec2i_t left_bottom, vec2i_t right_top, color_t color);
 EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color);
+
+EUCLIB_INLINE void euclib_draw_circle(euclib_plot_t *plot, vec2i_t pos, int radius, color_t color);
+EUCLIB_INLINE void euclib_draw_text(euclib_plot_t *plot, vec2i_t pos, const char* text,color_t color);
 
 typedef struct
 {
@@ -138,24 +141,6 @@ EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color) {
     }
 }
 
-EUCLIB_INLINE void euclib_plot_2d_bar(
-    euclib_plot_t *plot, 
-    float values[], 
-    unsigned int count, 
-    euclib_plot_bar_params_t params
-) {
-    // Todo
-}
-
-EUCLIB_INLINE void euclib_plot_2d_dots(
-    euclib_plot_t *plot, 
-    float values[], 
-    unsigned int count, 
-    euclib_plot_dots_params_t params
-) {
-    // Todo
-}
-
 EUCLIB_INLINE void euclib_draw_circle(
     euclib_plot_t *plot, 
     vec2i_t pos, 
@@ -185,9 +170,10 @@ EUCLIB_INLINE void euclib_draw_text(
     euclib_plot_t *plot, 
     vec2i_t pos, 
     const char* text,
-    int text_length,
     color_t color
 ) {
+    unsigned long text_length = EUCLIB_STRLEN(text);
+
     for(int c = 0; c < text_length; ++c) {
         unsigned char character = text[c];
         FontgGlyph glyph = ibm_bios_font[character];
@@ -197,7 +183,10 @@ EUCLIB_INLINE void euclib_draw_text(
                 int x = pos.y + i + (c * (8 + 1));
                 int y = pos.y + j;
 
-                static unsigned long long start = 0b0000000000000000000000000000000000000000000000000000000000000001;
+                if(!euclib_in_bounds(plot, (vec2i_t){ x, y })) 
+                    continue;
+
+                static unsigned long long start = 1u;
             
                 if((glyph & (start << ((8 - i) + j*8))) != 0) {
                     EUCLIB_PLOT_AT(plot, x, y) = color;
@@ -205,6 +194,24 @@ EUCLIB_INLINE void euclib_draw_text(
             }
         }
     }
+}
+
+EUCLIB_INLINE void euclib_plot_2d_bar(
+    euclib_plot_t *plot, 
+    float values[], 
+    unsigned int count, 
+    euclib_plot_bar_params_t params
+) {
+    // Todo
+}
+
+EUCLIB_INLINE void euclib_plot_2d_dots(
+    euclib_plot_t *plot, 
+    float values[], 
+    unsigned int count, 
+    euclib_plot_dots_params_t params
+) {
+    // Todo
 }
 
 EUCLIB_INLINE void euclib_plot_2d_line(
@@ -228,7 +235,7 @@ EUCLIB_INLINE void euclib_plot_2d_line(
         vec2i_t point = { i, j };
 
         if(!euclib_in_bounds(plot, point)) 
-                continue;
+            continue;
 
         euclib_draw_circle(plot, point, params.line_width, params.line_color);
     }

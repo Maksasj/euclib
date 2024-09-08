@@ -21,7 +21,7 @@ int main() {
         .line_width = 2
     };
 
-    euclib_fill_plot(&plot, EUCLIB_ACCENT);
+    euclib_fill_plot(&plot, EUCLIB_WHITE);
 
     euclib_plot_2d_line(&plot, &sinf, params);
     
@@ -31,9 +31,11 @@ int main() {
     params.line_color = EUCLIB_PURPLE;
     euclib_plot_2d_line(&plot, &tanf, params);
 
-    euclib_draw_text(&plot, (vec2i_t){300, 300}, "Hello world!", 12, EUCLIB_BLACK);
+    euclib_draw_text(&plot, (vec2i_t){300, 300}, "Hello world!", EUCLIB_BLACK);
 
     stbi_write_jpg("plot.png", 800, 600, 4, plot.value, 800);
+
+    free(plot.value);
 
     return 0;
 }
