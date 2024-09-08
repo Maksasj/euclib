@@ -43,6 +43,12 @@ typedef struct
     unsigned long long height;
 } euclib_plot_t;
 
+typedef unsigned char euclib_bool_t;
+#define EUCLIB_TRUE     ((euclib_bool_t) 1)
+#define EUCLIB_FALSE    ((euclib_bool_t) 0)
+
+EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point);
+
 EUCLIB_INLINE void euclib_fill_rect(euclib_plot_t *plot, vec2i_t left_bottom, vec2i_t right_top, color_t color);
 EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color);
 
@@ -87,6 +93,16 @@ EUCLIB_INLINE void euclib_plot_2d_line(
 
 #ifdef EUCLIB_IMPLEMENTATION
 
+EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point) {
+    if(point.x < 0 || point.y < 0)
+        return EUCLIB_FALSE;
+
+    if(point.x >= plot->width || point.y >= plot->height)
+        return EUCLIB_FALSE;
+
+    return EUCLIB_TRUE;
+}
+
 EUCLIB_INLINE void euclib_fill_rect(
     euclib_plot_t *plot, 
     vec2i_t left_bottom, 
@@ -99,7 +115,10 @@ EUCLIB_INLINE void euclib_fill_rect(
     for(int i = 0; i < width; ++i) {
         for(int j = 0; j < height; ++j) {
             int x = i + left_bottom.x;
-            int y = j + left_bottom.y; // Y flipping
+            int y = j + left_bottom.y;
+
+            if(!euclib_in_bounds(plot, (vec2i_t){x, y})) 
+                    continue;
 
             EUCLIB_PLOT_AT(plot, x, y) = color;
         }
@@ -146,6 +165,9 @@ EUCLIB_INLINE void euclib_draw_circle(
             int plot_x = x + pos.x;
             int plot_y = y + pos.y;
 
+            if(!euclib_in_bounds(plot, (vec2i_t){plot_x, plot_y})) 
+                continue;
+
             if(x * x + y * y > r2)
                 continue;
 
@@ -177,15 +199,18 @@ EUCLIB_INLINE void euclib_plot_2d_line(
     for(int i = params.padding; i < area_width; ++i) {
         float d = (float) i / (float) area_width;
 
-        float x = (d * (params.x_range.y - params.x_range.x));
+        float y = (d * (params.x_range.y - params.x_range.x));
+        float value = callback(y);
 
-        float value = callback(x);
+        vec2i_t point = {
+            i, 
+            ((int) ((height / 2) - params.padding + value * 100) + params.padding)
+        };
 
-        euclib_draw_circle(
-            plot, 
-            (vec2i_t){i, ((int) ((height / 2) - params.padding + value * 100) + params.padding)}, 
-            3, 
-            params.color);
+        if(!euclib_in_bounds(plot, point)) 
+                continue;
+
+        euclib_draw_circle(plot, point, 3, params.color);
     }
 }
 

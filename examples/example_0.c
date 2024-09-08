@@ -24,7 +24,7 @@ int main() {
 
     euclib_fill_rect(&plot, (vec2i_t){10, 20}, (vec2i_t){50, 50}, EUCLIB_GREEN);
 
-    euclib_draw_circle(&plot, (vec2i_t){50, 50}, 20, EUCLIB_ORANGE);
+    euclib_draw_circle(&plot, (vec2i_t){0, 0}, 20, EUCLIB_ORANGE);
 
     stbi_write_jpg("plot.png", 800, 600, 4, plot.value, 800);
 
