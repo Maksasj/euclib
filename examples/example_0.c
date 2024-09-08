@@ -17,7 +17,7 @@ int main() {
     euclib_plot_line_params_t params = {
         .x_range = { -3 * EUCLIB_PI, 3 * EUCLIB_PI },
         .y_range = { -4.0 , 4.0 },
-        .color = EUCLIB_BLUE,
+        .line_color = EUCLIB_BLUE,
         .line_width = 2
     };
 
@@ -25,11 +25,13 @@ int main() {
 
     euclib_plot_2d_line(&plot, &sinf, params);
     
-    params.color = EUCLIB_RED;
+    params.line_color = EUCLIB_RED;
     euclib_plot_2d_line(&plot, &cosf, params);
 
-    params.color = EUCLIB_PURPLE;
+    params.line_color = EUCLIB_PURPLE;
     euclib_plot_2d_line(&plot, &tanf, params);
+
+    euclib_draw_text(&plot, (vec2i_t){300, 300}, "Hello world!", 12, EUCLIB_BLACK);
 
     stbi_write_jpg("plot.png", 800, 600, 4, plot.value, 800);
 

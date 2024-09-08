@@ -3,6 +3,8 @@
 
 #define EUCLIB_INLINE static inline
 
+#include "ibm_bios_font.h"
+
 typedef unsigned int color_t;
 
 #define EUCLIB_WHITE    ((color_t)(0xffffffff))
@@ -85,7 +87,7 @@ typedef struct
 {
     vec2f_t x_range;
     vec2f_t y_range;
-    color_t color;
+    color_t line_color;
     int line_width;
 } euclib_plot_line_params_t;
 
@@ -179,6 +181,32 @@ EUCLIB_INLINE void euclib_draw_circle(
     }
 }
 
+EUCLIB_INLINE void euclib_draw_text(
+    euclib_plot_t *plot, 
+    vec2i_t pos, 
+    const char* text,
+    int text_length,
+    color_t color
+) {
+    for(int c = 0; c < text_length; ++c) {
+        unsigned char character = text[c];
+        FontgGlyph glyph = ibm_bios_font[character];
+
+        for(int i = 0; i < 8; ++i) {
+            for(int j = 0; j < 8; ++j) {
+                int x = pos.y + i + (c * (8 + 1));
+                int y = pos.y + j;
+
+                static unsigned long long start = 0b0000000000000000000000000000000000000000000000000000000000000001;
+            
+                if((glyph & (start << ((8 - i) + j*8))) != 0) {
+                    EUCLIB_PLOT_AT(plot, x, y) = color;
+                }
+            }
+        }
+    }
+}
+
 EUCLIB_INLINE void euclib_plot_2d_line(
     euclib_plot_t *plot, 
     graph_value_callback_t callback, 
@@ -202,7 +230,7 @@ EUCLIB_INLINE void euclib_plot_2d_line(
         if(!euclib_in_bounds(plot, point)) 
                 continue;
 
-        euclib_draw_circle(plot, point, params.line_width, params.color);
+        euclib_draw_circle(plot, point, params.line_width, params.line_color);
     }
 }
 
