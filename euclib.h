@@ -16,6 +16,8 @@ typedef unsigned int color_t;
 
 #define EUCLIB_ACCENT   ((color_t)(0xffeeeeee))
 
+#define EUCLIB_PI       ((float)(3.14159265359f))
+
 #define EUCLIB_PLOT_AT(PLOT, X, Y) ((PLOT)->value[X + (((PLOT)->height - 1) - Y) * (PLOT)->width])
 
 typedef float (*graph_value_callback_t)(const float x);
@@ -82,8 +84,9 @@ EUCLIB_INLINE void euclib_plot_2d_dots(
 typedef struct
 {
     vec2f_t x_range;
-    unsigned int padding;
+    vec2f_t y_range;
     color_t color;
+    int line_width;
 } euclib_plot_line_params_t;
 
 EUCLIB_INLINE void euclib_plot_2d_line(
@@ -181,36 +184,25 @@ EUCLIB_INLINE void euclib_plot_2d_line(
     graph_value_callback_t callback, 
     euclib_plot_line_params_t params
 ) {
-    euclib_fill_plot(plot, EUCLIB_ACCENT);
+    const int width = plot->width;
+    const int height = plot->height;
 
-    int width = plot->width;
-    int height = plot->height;
+    for(int i = 0; i < width; ++i) {
+        float d = (float) i / (float) width;
 
-    euclib_fill_rect(
-        plot,
-        (vec2i_t){params.padding, params.padding},
-        (vec2i_t){width - params.padding, height - params.padding},
-        EUCLIB_WHITE);
+        // point coordinates
+        float x = (d * (params.x_range.y - params.x_range.x)) + params.x_range.x;
+        float y = callback(x);
+  
+        float tmp = (y - params.y_range.x) / (params.y_range.y - params.y_range.x);
+        float j = tmp * plot->height;
 
- 
-    int area_width = width - params.padding;
-    int area_height = height - params.padding;
-
-    for(int i = params.padding; i < area_width; ++i) {
-        float d = (float) i / (float) area_width;
-
-        float y = (d * (params.x_range.y - params.x_range.x));
-        float value = callback(y);
-
-        vec2i_t point = {
-            i, 
-            ((int) ((height / 2) - params.padding + value * 100) + params.padding)
-        };
+        vec2i_t point = { i, j };
 
         if(!euclib_in_bounds(plot, point)) 
                 continue;
 
-        euclib_draw_circle(plot, point, 3, params.color);
+        euclib_draw_circle(plot, point, params.line_width, params.color);
     }
 }
 

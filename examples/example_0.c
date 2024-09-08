@@ -15,16 +15,21 @@ int main() {
     };
 
     euclib_plot_line_params_t params = {
-        .x_range = { -10.0f, 10.0f },
-        .padding = 10.f,
-        .color = EUCLIB_BLUE
+        .x_range = { -3 * EUCLIB_PI, 3 * EUCLIB_PI },
+        .y_range = { -4.0 , 4.0 },
+        .color = EUCLIB_BLUE,
+        .line_width = 2
     };
 
+    euclib_fill_plot(&plot, EUCLIB_ACCENT);
+
     euclib_plot_2d_line(&plot, &sinf, params);
+    
+    params.color = EUCLIB_RED;
+    euclib_plot_2d_line(&plot, &cosf, params);
 
-    euclib_fill_rect(&plot, (vec2i_t){10, 20}, (vec2i_t){50, 50}, EUCLIB_GREEN);
-
-    euclib_draw_circle(&plot, (vec2i_t){0, 0}, 20, EUCLIB_ORANGE);
+    params.color = EUCLIB_PURPLE;
+    euclib_plot_2d_line(&plot, &tanf, params);
 
     stbi_write_jpg("plot.png", 800, 600, 4, plot.value, 800);
 
