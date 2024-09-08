@@ -16,6 +16,8 @@ typedef unsigned int color_t;
 
 #define EUCLIB_ACCENT   ((color_t)(0xffeeeeee))
 
+#define EUCLIB_PLOT_AT(PLOT, X, Y) ((PLOT)->value[X + (((PLOT)->height - 1) - Y) * (PLOT)->width])
+
 typedef float (*graph_value_callback_t)(const float x);
 
 typedef struct {
@@ -97,17 +99,17 @@ EUCLIB_INLINE void euclib_fill_rect(
     for(int i = 0; i < width; ++i) {
         for(int j = 0; j < height; ++j) {
             int x = i + left_bottom.x;
-            int y = plot->height - (j + left_bottom.y); // Y flipping
+            int y = j + left_bottom.y; // Y flipping
 
-            plot->value[x + y * plot->width] = color;
+            EUCLIB_PLOT_AT(plot, x, y) = color;
         }
     }
 }
 
 EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color) {
-    for(int i = 0; i < plot->width; ++i) {
-        for(int j = 0; j < plot->height; ++j) {
-            plot->value[i + j*plot->width] = color;
+    for(int x = 0; x < plot->width; ++x) {
+        for(int y = 0; y < plot->height; ++y) {
+            EUCLIB_PLOT_AT(plot, x, y) = color;
         }
     }
 }
@@ -118,7 +120,7 @@ EUCLIB_INLINE void euclib_plot_2d_bar(
     unsigned int count, 
     euclib_plot_bar_params_t params
 ) {
-
+    // Todo
 }
 
 EUCLIB_INLINE void euclib_plot_2d_dots(
@@ -127,7 +129,29 @@ EUCLIB_INLINE void euclib_plot_2d_dots(
     unsigned int count, 
     euclib_plot_dots_params_t params
 ) {
+    // Todo
+}
 
+EUCLIB_INLINE void euclib_draw_circle(
+    euclib_plot_t *plot, 
+    vec2i_t pos, 
+    int radius, 
+    color_t color
+) {
+    int diameter = radius + radius;
+    int r2 = radius * radius;
+
+    for(int x = -radius; x < radius; ++x) {
+        for(int y = -radius; y < radius; ++y) {
+            int plot_x = x + pos.x;
+            int plot_y = y + pos.y;
+
+            if(x * x + y * y > r2)
+                continue;
+
+            EUCLIB_PLOT_AT(plot, plot_x, plot_y) = color;
+        }
+    }
 }
 
 EUCLIB_INLINE void euclib_plot_2d_line(
@@ -146,6 +170,7 @@ EUCLIB_INLINE void euclib_plot_2d_line(
         (vec2i_t){width - params.padding, height - params.padding},
         EUCLIB_WHITE);
 
+ 
     int area_width = width - params.padding;
     int area_height = height - params.padding;
 
@@ -156,7 +181,11 @@ EUCLIB_INLINE void euclib_plot_2d_line(
 
         float value = callback(x);
 
-        plot->value[i + ((int) ((height / 2) - params.padding + value * 100) + params.padding) * width] = params.color;
+        euclib_draw_circle(
+            plot, 
+            (vec2i_t){i, ((int) ((height / 2) - params.padding + value * 100) + params.padding)}, 
+            3, 
+            params.color);
     }
 }
 
