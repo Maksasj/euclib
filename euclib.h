@@ -64,6 +64,7 @@ EUCLIB_INLINE void euclib_draw_line_width(euclib_plot_t *plot, vec2i_t first, ve
 EUCLIB_INLINE void euclib_draw_circle(euclib_plot_t *plot, vec2i_t pos, int radius, color_t color);
 EUCLIB_INLINE void euclib_draw_text(euclib_plot_t *plot, vec2i_t pos, const char* text,color_t color);
 
+/*
 typedef struct
 {
 
@@ -90,6 +91,7 @@ EUCLIB_INLINE void euclib_plot_2d_dots(
     float values[], 
     unsigned int count, 
     euclib_plot_dots_params_t params);
+*/
 
 typedef struct
 {
@@ -107,6 +109,13 @@ EUCLIB_INLINE void euclib_plot_2d_line(
 EUCLIB_INLINE void euclib_plot_2d_line_smooth(
     euclib_plot_t *plot, 
     graph_value_callback_t callback, 
+    euclib_plot_line_params_t params);
+
+EUCLIB_INLINE void euclib_plot_circle_line(
+    euclib_plot_t *plot, 
+    vec2f_t center,
+    float radius,
+    color_t color,
     euclib_plot_line_params_t params);
 
 #ifdef EUCLIB_IMPLEMENTATION
@@ -242,7 +251,6 @@ EUCLIB_INLINE void euclib_draw_circle(
     int radius, 
     color_t color
 ) {
-    int diameter = radius + radius;
     int r2 = radius * radius;
 
     for(int x = -radius; x < radius; ++x) {
@@ -291,6 +299,7 @@ EUCLIB_INLINE void euclib_draw_text(
     }
 }
 
+/*
 EUCLIB_INLINE void euclib_plot_2d_bar(
     euclib_plot_t *plot, 
     float values[], 
@@ -308,6 +317,7 @@ EUCLIB_INLINE void euclib_plot_2d_dots(
 ) {
     // Todo
 }
+*/
 
 EUCLIB_INLINE void euclib_plot_2d_line(
     euclib_plot_t *plot, 
@@ -370,6 +380,25 @@ EUCLIB_INLINE void euclib_plot_2d_line_smooth(
         euclib_draw_line_width(plot, last_point, point, params.line_width, params.line_color);
         last_point = point;
     }
+}
+
+EUCLIB_INLINE void euclib_plot_circle_line(
+    euclib_plot_t *plot, 
+    vec2f_t center,
+    float radius,
+    color_t color,
+    euclib_plot_line_params_t params
+) {
+    const int width = plot->width;
+    const int height = plot->height;
+
+    float tmpx = (center.x - params.x_range.x) / (params.x_range.y - params.x_range.x);
+    float i = tmpx * plot->width;
+
+    float tmpy = (center.y - params.y_range.x) / (params.y_range.y - params.y_range.x);
+    float j = tmpy * plot->height;
+
+    euclib_draw_circle(plot, (vec2i_t) { i, j }, radius, color);
 }
 
 #endif
