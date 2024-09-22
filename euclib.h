@@ -104,6 +104,11 @@ EUCLIB_INLINE void euclib_plot_2d_line(
     graph_value_callback_t callback, 
     euclib_plot_line_params_t params);
 
+EUCLIB_INLINE void euclib_plot_2d_line_smooth(
+    euclib_plot_t *plot, 
+    graph_value_callback_t callback, 
+    euclib_plot_line_params_t params);
+
 #ifdef EUCLIB_IMPLEMENTATION
 
 EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point) {
@@ -328,6 +333,37 @@ EUCLIB_INLINE void euclib_plot_2d_line(
             continue;
 
         euclib_draw_circle(plot, point, params.line_width, params.line_color);
+    }
+}
+
+EUCLIB_INLINE void euclib_plot_2d_line_smooth(
+    euclib_plot_t *plot, 
+    graph_value_callback_t callback, 
+    euclib_plot_line_params_t params
+) {
+    const int width = plot->width;
+    const int height = plot->height;
+
+    vec2i_t last_point = { -100, -100 }; 
+
+    for(int i = 0; i < width; ++i) {
+        float d = (float) i / (float) width;
+
+        // point coordinates
+        float x = (d * (params.x_range.y - params.x_range.x)) + params.x_range.x;
+        float y = callback(x);
+  
+        float tmp = (y - params.y_range.x) / (params.y_range.y - params.y_range.x);
+        float j = tmp * plot->height;
+
+        vec2i_t point = { i, j };
+
+        if(!euclib_in_bounds(plot, point)) {
+            continue;
+        }
+
+        euclib_draw_line_width(plot, last_point, point, params.line_width, params.line_color);
+        last_point = point;
     }
 }
 
