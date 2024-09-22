@@ -52,9 +52,14 @@ typedef unsigned char euclib_bool_t;
 #define EUCLIB_FALSE    ((euclib_bool_t) 0)
 
 EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point);
+EUCLIB_INLINE void euclib_swap(int *a, int *b);
 
 EUCLIB_INLINE void euclib_fill_rect(euclib_plot_t *plot, vec2i_t left_bottom, vec2i_t right_top, color_t color);
 EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color);
+ 
+// Code from https://github.com/tsoding/olive.c/blob/master/olive.c
+EUCLIB_INLINE void euclib_draw_line(euclib_plot_t *plot, vec2i_t first, vec2i_t second, color_t color);
+EUCLIB_INLINE void euclib_draw_line_width(euclib_plot_t *plot, vec2i_t first, vec2i_t second, float line_width, color_t color);
 
 EUCLIB_INLINE void euclib_draw_circle(euclib_plot_t *plot, vec2i_t pos, int radius, color_t color);
 EUCLIB_INLINE void euclib_draw_text(euclib_plot_t *plot, vec2i_t pos, const char* text,color_t color);
@@ -111,6 +116,12 @@ EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point)
     return EUCLIB_TRUE;
 }
 
+EUCLIB_INLINE void euclib_swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
 EUCLIB_INLINE void euclib_fill_rect(
     euclib_plot_t *plot, 
     vec2i_t left_bottom, 
@@ -137,6 +148,85 @@ EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color) {
     for(int x = 0; x < plot->width; ++x) {
         for(int y = 0; y < plot->height; ++y) {
             EUCLIB_PLOT_AT(plot, x, y) = color;
+        }
+    }
+}
+
+EUCLIB_INLINE void euclib_draw_line(euclib_plot_t *plot, vec2i_t first, vec2i_t second, color_t color) {
+    vec2i_t d = (vec2i_t) { 
+        second.x - first.x, 
+        second.y - first.y
+    };
+
+    if (d.x == 0 && d.y == 0) {
+        if (euclib_in_bounds(plot, (vec2i_t){ first.x, first.y })) {
+            EUCLIB_PLOT_AT(plot, first.x, first.y) = color;
+        }
+
+        return;
+    }
+
+    if (abs(d.x) > abs(d.y)) {
+        if (first.x > second.x) {
+            euclib_swap(&first.x, &second.x);
+            euclib_swap(&first.y, &second.y);
+        }
+
+        for (int x = first.x; x <= second.x; ++x) {
+            int y = d.y*(x - first.x)/d.x + first.y;
+
+            if (euclib_in_bounds(plot, (vec2i_t){ x, y })) {
+                EUCLIB_PLOT_AT(plot, x, y) = color;
+            }
+        }
+    } else {
+        if (first.y > second.y) {
+            euclib_swap(&first.x, &second.x);
+            euclib_swap(&first.y, &second.y);
+        }
+
+        for (int y = first.y; y <= second.y; ++y) {
+            int x = d.x*(y - first.y)/d.y + first.x;
+
+            if (euclib_in_bounds(plot, (vec2i_t){ x, y })) {
+                EUCLIB_PLOT_AT(plot, x, y) = color;
+            }
+        }
+    }
+}
+
+EUCLIB_INLINE void euclib_draw_line_width(euclib_plot_t *plot, vec2i_t first, vec2i_t second, float line_width, color_t color) {
+    vec2i_t d = (vec2i_t) { 
+        second.x - first.x, 
+        second.y - first.y
+    };
+
+    if (d.x == 0 && d.y == 0) {
+        euclib_draw_circle(plot, (vec2i_t){ first.x, first.y }, line_width, color);
+        return;
+    }
+
+    if (abs(d.x) > abs(d.y)) {
+        if (first.x > second.x) {
+            euclib_swap(&first.x, &second.x);
+            euclib_swap(&first.y, &second.y);
+        }
+
+        for (int x = first.x; x <= second.x; ++x) {
+            int y = d.y*(x - first.x)/d.x + first.y;
+
+            euclib_draw_circle(plot, (vec2i_t){ x, y }, line_width, color);
+        }
+    } else {
+        if (first.y > second.y) {
+            euclib_swap(&first.x, &second.x);
+            euclib_swap(&first.y, &second.y);
+        }
+
+        for (int y = first.y; y <= second.y; ++y) {
+            int x = d.x*(y - first.y)/d.y + first.x;
+
+            euclib_draw_circle(plot, (vec2i_t){ x, y }, line_width, color);
         }
     }
 }
