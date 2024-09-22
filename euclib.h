@@ -362,6 +362,11 @@ EUCLIB_INLINE void euclib_plot_2d_line_smooth(
             continue;
         }
 
+        if(last_point.x < 0 || last_point.y < 0) {
+            last_point = point;
+            continue;
+        }
+
         euclib_draw_line_width(plot, last_point, point, params.line_width, params.line_color);
         last_point = point;
     }
