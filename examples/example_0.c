@@ -31,7 +31,7 @@ int main() {
     params.line_color = EUCLIB_PURPLE;
     euclib_plot_2d_line_smooth(&plot, &tanf, params);
 
-    euclib_draw_text(&plot, (vec2i_t){ 300, 300 }, "Hello world!", EUCLIB_BLACK);
+    euclib_draw_text(&plot, (vec2i_t){ 300, 300 }, "Hello world!", EUCLIB_BLACK, 1);
 
     stbi_write_jpg("plot.png", 800, 600, 4, plot.value, 800);
 

@@ -64,7 +64,7 @@ EUCLIB_INLINE void euclib_draw_line(euclib_plot_t *plot, vec2i_t first, vec2i_t 
 EUCLIB_INLINE void euclib_draw_line_width(euclib_plot_t *plot, vec2i_t first, vec2i_t second, float line_width, color_t color);
 
 EUCLIB_INLINE void euclib_draw_circle(euclib_plot_t *plot, vec2i_t pos, float radius, color_t color);
-EUCLIB_INLINE void euclib_draw_text(euclib_plot_t *plot, vec2i_t pos, const char* text,color_t color);
+EUCLIB_INLINE void euclib_draw_text(euclib_plot_t *plot, vec2i_t pos, const char* text, color_t color, unsigned int font_size);
 
 typedef struct
 {
@@ -86,6 +86,7 @@ typedef struct
     vec2f_t x_range;
     vec2f_t y_range;
     color_t font_color;
+    unsigned int font_size;
 } euclib_plot_text_params_t;
 
 EUCLIB_INLINE void euclib_plot_2d_line(
@@ -299,7 +300,8 @@ EUCLIB_INLINE void euclib_draw_text(
     euclib_plot_t *plot, 
     vec2i_t pos, 
     const char* text,
-    color_t color
+    color_t color,
+    unsigned int font_size
 ) {
     unsigned long text_length = EUCLIB_STRLEN(text);
 
@@ -472,7 +474,7 @@ EUCLIB_INLINE void euclib_plot_grid(
 EUCLIB_INLINE void euclib_plot_text(euclib_plot_t *plot, vec2f_t pos, const char* text, euclib_plot_text_params_t params) {
     vec2i_t point = euclib_to_plot_cord(plot, pos, params.x_range, params.y_range);
 
-    euclib_draw_text(plot, point, text, params.font_color);
+    euclib_draw_text(plot, point, text, params.font_color, params.font_size);
 }
 
 #endif
