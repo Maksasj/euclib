@@ -22,7 +22,7 @@ typedef unsigned int color_t;
 #define EUCLIB_YELLOW   ((color_t)(0xff34ebeb))
 #define EUCLIB_ORANGE   ((color_t)(0xff3486eb))
 
-#define EUCLIB_ACCENT   ((color_t)(0xffeeeeee))
+#define EUCLIB_ACCENT   ((color_t)(0xffaaaaaa))
 
 #define EUCLIB_PI       ((float)(3.14159265359f))
 
@@ -53,6 +53,8 @@ typedef unsigned char euclib_bool_t;
 
 EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point);
 EUCLIB_INLINE void euclib_swap(int *a, int *b);
+EUCLIB_INLINE int euclib_clip(int min, int max, int value);
+EUCLIB_INLINE vec2i_t euclib_to_plot_cord(euclib_plot_t* plot, vec2f_t cord, vec2f_t x_range, vec2f_t y_range);
 
 EUCLIB_INLINE void euclib_fill_rect(euclib_plot_t *plot, vec2i_t left_bottom, vec2i_t right_top, color_t color);
 EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color);
@@ -61,7 +63,7 @@ EUCLIB_INLINE void euclib_fill_plot(euclib_plot_t *plot, color_t color);
 EUCLIB_INLINE void euclib_draw_line(euclib_plot_t *plot, vec2i_t first, vec2i_t second, color_t color);
 EUCLIB_INLINE void euclib_draw_line_width(euclib_plot_t *plot, vec2i_t first, vec2i_t second, float line_width, color_t color);
 
-EUCLIB_INLINE void euclib_draw_circle(euclib_plot_t *plot, vec2i_t pos, int radius, color_t color);
+EUCLIB_INLINE void euclib_draw_circle(euclib_plot_t *plot, vec2i_t pos, float radius, color_t color);
 EUCLIB_INLINE void euclib_draw_text(euclib_plot_t *plot, vec2i_t pos, const char* text,color_t color);
 
 /*
@@ -111,11 +113,18 @@ EUCLIB_INLINE void euclib_plot_2d_line_smooth(
     graph_value_callback_t callback, 
     euclib_plot_line_params_t params);
 
-EUCLIB_INLINE void euclib_plot_circle_line(
+EUCLIB_INLINE void euclib_plot_circle(
     euclib_plot_t *plot, 
     vec2f_t center,
     float radius,
     color_t color,
+    euclib_plot_line_params_t params);
+
+EUCLIB_INLINE void euclib_plot_x_axis(euclib_plot_t *plot, euclib_plot_line_params_t params);
+EUCLIB_INLINE void euclib_plot_y_axis(euclib_plot_t *plot, euclib_plot_line_params_t params);
+
+EUCLIB_INLINE void euclib_plot_axis(
+    euclib_plot_t *plot, 
     euclib_plot_line_params_t params);
 
 #ifdef EUCLIB_IMPLEMENTATION
@@ -136,6 +145,23 @@ EUCLIB_INLINE void euclib_swap(int *a, int *b) {
     *b = temp;
 }
 
+EUCLIB_INLINE int euclib_clip(int min, int max, int value) {
+    if(value < min) value = min;
+    if(value > max) value = max;
+
+    return value;
+}
+
+EUCLIB_INLINE vec2i_t euclib_to_plot_cord(euclib_plot_t* plot, vec2f_t cord, vec2f_t x_range, vec2f_t y_range) {
+    float tmpx = (cord.x - x_range.x) / (x_range.y - x_range.x);
+    float i = tmpx * plot->width;
+
+    float tmpy = (cord.y - y_range.x) / (y_range.y - y_range.x);
+    float j = tmpy * plot->height;
+
+    return (vec2i_t) { i, j };
+}
+    
 EUCLIB_INLINE void euclib_fill_rect(
     euclib_plot_t *plot, 
     vec2i_t left_bottom, 
@@ -210,6 +236,12 @@ EUCLIB_INLINE void euclib_draw_line(euclib_plot_t *plot, vec2i_t first, vec2i_t 
 }
 
 EUCLIB_INLINE void euclib_draw_line_width(euclib_plot_t *plot, vec2i_t first, vec2i_t second, float line_width, color_t color) {
+    first.x = euclib_clip(0, plot->width - 1, first.x);
+    first.y = euclib_clip(0, plot->height - 1, first.y);
+    
+    second.x = euclib_clip(0, plot->width - 1, second.x);
+    second.y = euclib_clip(0, plot->height - 1, second.y);
+
     vec2i_t d = (vec2i_t) { 
         second.x - first.x, 
         second.y - first.y
@@ -248,10 +280,16 @@ EUCLIB_INLINE void euclib_draw_line_width(euclib_plot_t *plot, vec2i_t first, ve
 EUCLIB_INLINE void euclib_draw_circle(
     euclib_plot_t *plot, 
     vec2i_t pos, 
-    int radius, 
+    float radius, 
     color_t color
 ) {
-    int r2 = radius * radius;
+    float r2 = radius * radius;
+
+    // Todo
+    if(radius < 1) {
+        EUCLIB_PLOT_AT(plot, pos.x, pos.y) = color;
+        return;
+    }
 
     for(int x = -radius; x < radius; ++x) {
         for(int y = -radius; y < radius; ++y) {
@@ -283,7 +321,7 @@ EUCLIB_INLINE void euclib_draw_text(
 
         for(int i = 0; i < 8; ++i) {
             for(int j = 0; j < 8; ++j) {
-                int x = pos.y + i + (c * (8 + 1));
+                int x = pos.x + i + (c * (8 + 1));
                 int y = pos.y + j;
 
                 if(!euclib_in_bounds(plot, (vec2i_t){ x, y })) 
@@ -382,23 +420,75 @@ EUCLIB_INLINE void euclib_plot_2d_line_smooth(
     }
 }
 
-EUCLIB_INLINE void euclib_plot_circle_line(
+EUCLIB_INLINE void euclib_plot_circle(
     euclib_plot_t *plot, 
     vec2f_t center,
     float radius,
     color_t color,
     euclib_plot_line_params_t params
 ) {
-    const int width = plot->width;
-    const int height = plot->height;
+    vec2i_t point = euclib_to_plot_cord(plot, center, params.x_range, params.y_range);
 
-    float tmpx = (center.x - params.x_range.x) / (params.x_range.y - params.x_range.x);
-    float i = tmpx * plot->width;
+    euclib_draw_circle(plot, point, radius, color);
+}
 
-    float tmpy = (center.y - params.y_range.x) / (params.y_range.y - params.y_range.x);
-    float j = tmpy * plot->height;
+EUCLIB_INLINE void euclib_plot_x_axis(
+    euclib_plot_t *plot, 
+    euclib_plot_line_params_t params
+) {
+    vec2i_t first_point = euclib_to_plot_cord(plot, (vec2f_t){ params.x_range.x, 0.0f }, params.x_range, params.y_range);
+    vec2i_t second_point = euclib_to_plot_cord(plot, (vec2f_t){ params.x_range.y, 0.0f }, params.x_range, params.y_range);
 
-    euclib_draw_circle(plot, (vec2i_t) { i, j }, radius, color);
+    euclib_draw_line_width(plot, first_point, second_point, params.line_width, params.line_color);
+}
+
+EUCLIB_INLINE void euclib_plot_y_axis(
+    euclib_plot_t *plot, 
+    euclib_plot_line_params_t params
+) {
+    vec2i_t first_point = euclib_to_plot_cord(plot, (vec2f_t){ 0.0f, params.y_range.x }, params.x_range, params.y_range);
+    vec2i_t second_point = euclib_to_plot_cord(plot, (vec2f_t){ 0.0f, params.y_range.y }, params.x_range, params.y_range);
+
+    euclib_draw_line_width(plot, first_point, second_point, params.line_width, params.line_color);
+}
+
+EUCLIB_INLINE void euclib_plot_axis(
+    euclib_plot_t *plot, 
+    euclib_plot_line_params_t params
+) {
+    euclib_plot_x_axis(plot, params);
+    euclib_plot_y_axis(plot, params);
+}
+
+EUCLIB_INLINE void euclib_plot_grid(
+    euclib_plot_t *plot, 
+    float step,
+    euclib_plot_line_params_t params
+) {
+    vec2f_t center = { 
+        ((int) (params.x_range.x / step))*step, 
+        ((int) (params.y_range.x / step))*step,
+    };
+
+    for(float x = center.x; x <= params.x_range.y; x += step) {
+        vec2i_t first_point = euclib_to_plot_cord(plot, (vec2f_t){ x, params.y_range.x }, params.x_range, params.y_range);
+        vec2i_t second_point = euclib_to_plot_cord(plot, (vec2f_t){ x, params.y_range.y }, params.x_range, params.y_range);
+
+        euclib_draw_line_width(plot, first_point, second_point, params.line_width, params.line_color);
+    }
+
+    for(float y = center.y; y <= params.y_range.y; y += step) {
+        vec2i_t first_point = euclib_to_plot_cord(plot, (vec2f_t){ params.x_range.x, y }, params.x_range, params.y_range);
+        vec2i_t second_point = euclib_to_plot_cord(plot, (vec2f_t){ params.x_range.y, y }, params.x_range, params.y_range);
+
+        euclib_draw_line_width(plot, first_point, second_point, params.line_width, params.line_color);
+    }
+}
+
+EUCLIB_INLINE void euclib_plot_text(euclib_plot_t *plot, vec2f_t pos, const char* text, color_t color, euclib_plot_line_params_t params) {
+    vec2i_t point = euclib_to_plot_cord(plot, pos, params.x_range, params.y_range);
+
+    euclib_draw_text(plot, point, text, color);
 }
 
 #endif
