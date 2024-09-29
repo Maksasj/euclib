@@ -18,7 +18,8 @@ int main() {
         .x_range = { -3 * EUCLIB_PI, 3 * EUCLIB_PI },
         .y_range = { -4.0 , 4.0 },
         .line_color = EUCLIB_BLUE,
-        .line_width = 1
+        .line_width = 1,
+        .dashed_spacing = 0
     };
 
     euclib_fill_plot(&plot, EUCLIB_WHITE);
