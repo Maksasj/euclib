@@ -13,6 +13,12 @@
     #define EUCLIB_SQRT(VAL) (sqrt((VAL)))
 #endif
 
+#ifndef EUCLIB_RAND
+    #include <stdlib.h>
+
+    #define EUCLIB_RAND() (rand())
+#endif
+
 #define EUCLIB_INLINE static inline
 
 #include "ibm_bios_font.h"
@@ -56,6 +62,8 @@ typedef struct
 typedef unsigned char euclib_bool_t;
 #define EUCLIB_TRUE     ((euclib_bool_t) 1)
 #define EUCLIB_FALSE    ((euclib_bool_t) 0)
+
+EUCLIB_INLINE color_t euclib_random_color();
 
 EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point);
 EUCLIB_INLINE void euclib_swap(int *a, int *b);
@@ -130,6 +138,10 @@ EUCLIB_INLINE void euclib_plot_grid(euclib_plot_t *plot, float step, euclib_plot
 EUCLIB_INLINE void euclib_plot_text(euclib_plot_t *plot, vec2f_t pos, const char* text, euclib_plot_text_params_t params);
 
 #ifdef EUCLIB_IMPLEMENTATION
+
+EUCLIB_INLINE color_t euclib_random_color() {
+    return EUCLIB_RAND() | 0xff000000;
+}
 
 EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point) {
     if(point.x < 0 || point.y < 0)
