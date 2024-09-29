@@ -4,19 +4,25 @@
 #ifndef EUCLIB_STRLEN
     #include <string.h>
 
-    #define EUCLIB_STRLEN(STR) (strlen(STR))
+    #define EUCLIB_STRLEN strlen
 #endif
 
 #ifndef EUCLIB_SQRT
     #include <math.h>
 
-    #define EUCLIB_SQRT(VAL) (sqrt((VAL)))
+    #define EUCLIB_SQRT sqrt
 #endif
 
 #ifndef EUCLIB_RAND
     #include <stdlib.h>
 
-    #define EUCLIB_RAND() (rand())
+    #define EUCLIB_RAND rand
+#endif
+
+#ifndef EUCLIB_SPRINTF
+    #include <stdio.h>
+
+    #define EUCLIB_SPRINTF sprintf
 #endif
 
 #define EUCLIB_INLINE static inline
@@ -136,6 +142,7 @@ EUCLIB_INLINE void euclib_plot_grid_vertical(euclib_plot_t *plot,  vec2f_t cente
 EUCLIB_INLINE void euclib_plot_grid(euclib_plot_t *plot, float step, euclib_plot_line_params_t params);
 
 EUCLIB_INLINE void euclib_plot_text(euclib_plot_t *plot, vec2f_t pos, const char* text, euclib_plot_text_params_t params);
+EUCLIB_INLINE void euclib_plot_axis_text(euclib_plot_t *plot, float step, euclib_plot_text_params_t params);
 
 #ifdef EUCLIB_IMPLEMENTATION
 
@@ -356,16 +363,18 @@ EUCLIB_INLINE void euclib_draw_text(
 
         for(int i = 0; i < 8; ++i) {
             for(int j = 0; j < 8; ++j) {
-                int x = pos.x + i + (c * (8 + 1));
-                int y = pos.y + j;
+                int x = pos.x + i * font_size + (c  * font_size * (8 + 1));
+                int y = pos.y + j * font_size;
 
                 if(!euclib_in_bounds(plot, (vec2i_t){ x, y })) 
                     continue;
 
                 static unsigned long long start = 1u;
-            
+
+
                 if((glyph & (start << ((8 - i) + j*8))) != 0) {
                     EUCLIB_PLOT_AT(plot, x, y) = color;
+                    euclib_draw_circle(plot, (vec2i_t){ x, y, }, font_size, color);
                 }
             }
         }
@@ -533,6 +542,25 @@ EUCLIB_INLINE void euclib_plot_text(euclib_plot_t *plot, vec2f_t pos, const char
     vec2i_t point = euclib_to_plot_cord(plot, pos, params.x_range, params.y_range);
 
     euclib_draw_text(plot, point, text, params.font_color, params.font_size);
+}
+
+EUCLIB_INLINE void euclib_plot_axis_text(euclib_plot_t *plot, float step, euclib_plot_text_params_t params) {
+    vec2f_t center = { 
+        ((int) (params.x_range.x / step))*step, 
+        ((int) (params.y_range.x / step))*step,
+    };
+
+    for(float y = center.y; y <= params.y_range.y; y += step) {
+        char buffer[100] = { '\0' };
+        sprintf(buffer, "%.1f", y);
+        euclib_plot_text(plot, (vec2f_t){ 0.0f  + 0.05f, y  + 0.1f}, buffer, params);
+    }
+
+    for(float x = center.x; x <= params.x_range.y; x += step) {
+        char buffer[100] = { '\0' };
+        sprintf(buffer, "%.1f", x);
+        euclib_plot_text(plot, (vec2f_t){ x + 0.05f, 0.1f }, buffer, params);
+    }
 }
 
 #endif
