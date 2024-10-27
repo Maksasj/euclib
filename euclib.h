@@ -166,6 +166,18 @@ EUCLIB_INLINE void euclib_swap(int *a, int *b) {
     *b = temp;
 }
 
+EUCLIB_INLINE void euclib_swap_vec2f(vec2f_t *a, vec2f_t *b) {
+    vec2f_t temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+EUCLIB_INLINE void euclib_swap_float(float *a, float *b) {
+    float temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
 EUCLIB_INLINE int euclib_clip(int min, int max, int value) {
     if(value < min) value = min;
     if(value > max) value = max;
