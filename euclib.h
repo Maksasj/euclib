@@ -54,6 +54,12 @@ typedef struct {
 } vec2f_t;
 
 typedef struct {
+    float x;
+    float y;
+    float z;
+} vec3f_t;
+
+typedef struct {
     int x;
     int y;
 } vec2i_t;
@@ -75,7 +81,7 @@ EUCLIB_INLINE euclib_bool_t euclib_in_bounds(euclib_plot_t *plot, vec2i_t point)
 EUCLIB_INLINE void euclib_swap(int *a, int *b);
 EUCLIB_INLINE int euclib_clip(int min, int max, int value);
 EUCLIB_INLINE float euclib_distance(vec2f_t first, vec2f_t second);
-EUCLIB_INLINE float euclib_length(vec2f_t vec);
+EUCLIB_INLINE float euclib_length_v2(vec2f_t vec);
 EUCLIB_INLINE vec2f_t euclib_normalize(vec2f_t vec);
 EUCLIB_INLINE vec2i_t euclib_to_plot_cord(euclib_plot_t* plot, vec2f_t cord, vec2f_t x_range, vec2f_t y_range);
 
@@ -192,12 +198,16 @@ EUCLIB_INLINE float euclib_distance(vec2f_t first, vec2f_t second) {
     return EUCLIB_SQRT((a*a)+(b*b));
 }
 
-EUCLIB_INLINE float euclib_length(vec2f_t vec) {
+EUCLIB_INLINE float euclib_length_v2(vec2f_t vec) {
     return EUCLIB_SQRT(vec.x * vec.x + vec.y * vec.y);
 }
 
+EUCLIB_INLINE float euclib_length_v3(vec3f_t vec) {
+    return EUCLIB_SQRT(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+}
+
 EUCLIB_INLINE vec2f_t euclib_normalize(vec2f_t vec) {
-    const float length = euclib_length(vec);
+    const float length = euclib_length_v2(vec);
 
     return (vec2f_t) {
         vec.x / length,
